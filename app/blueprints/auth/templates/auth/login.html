@@ -1,24 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Login{% endblock %}
+{% block title %}Iniciar sesión{% endblock %}
 
 {% block content %}
-<h3>Iniciar Sesión</h3>
+<div class="card login-container" style="max-width:460px;margin:40px auto;">
+  <h2 class="card-title" style="text-align:center;">Iniciar sesión</h2>
 
-<form method="POST">
-    <div class="mb-3">
-        <label>Email</label>
-        <input name="email" type="email" class="form-control" required>
+  <form method="POST">
+    <div class="input-icon mb-2">
+      <span class="icon-left"></span>
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" required>
     </div>
 
-    <div class="mb-3">
-        <label>Contraseña</label>
-        <input name="password" type="password" class="form-control" required>
+    <div class="mb-2">
+      <label class="form-label">Contraseña</label>
+      <input type="password" name="password" class="form-control" required>
     </div>
 
     <button class="btn btn-primary w-100">Entrar</button>
-</form>
-
-<p class="mt-3">
-    ¿No tienes cuenta? <a href="/auth/register">Registrarse</a>
-</p>
+  </form>
+</div>
 {% endblock %}

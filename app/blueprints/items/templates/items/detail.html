@@ -2,10 +2,15 @@
 {% block title %}Detalle Item{% endblock %}
 
 {% block content %}
-<h2>{{ item.name }}</h2>
-<p><strong>Propietario:</strong> {{ item.owner.email if item.owner else '—' }}</p>
-<p><strong>Creado:</strong> {{ item.created_at }}</p>
-<p>{{ item.description }}</p>
+<div class="card">
+  <h2 class="card-title">{{ item.name }}</h2>
+  <p class="text-muted">Por {{ item.owner.email }} · {{ item.created_at }}</p>
 
-<a href="{{ url_for('items.list_items') }}" class="btn btn-secondary">Volver</a>
+  <p class="mt-2">{{ item.description }}</p>
+
+  <div class="mt-2">
+    <a class="btn btn-primary" href="{{ url_for('items.item_edit', item_id=item.id) }}">Editar</a>
+    <a class="btn btn-ghost" href="{{ url_for('items.list_items') }}">Volver</a>
+  </div>
+</div>
 {% endblock %}

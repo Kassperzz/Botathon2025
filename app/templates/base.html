@@ -1,52 +1,89 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Mi App{% endblock %}</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}MiCorp{% endblock %}</title>
 
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/corporate.css') }}">
+
+  {% block head %}{% endblock %}
 </head>
-<body>
+<body class="app-layout">
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a class="navbar-brand" href="/">MiApp</a>
+  <header class="navbar container">
+    <div class="brand">MiCorp</div>
 
-        <div>
-            <ul class="navbar-nav">
-
-                {% if current_user.is_authenticated %}
-                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
-
-                    {% if current_user.is_admin %}
-                        <li class="nav-item"><a class="nav-link" href="/admin">Admin</a></li>
-                    {% endif %}
-
-                    <li class="nav-item"><a class="nav-link" href="/users/profile">Perfil</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/auth/logout">Salir</a></li>
-                {% else %}
-                    <li class="nav-item"><a class="nav-link" href="/auth/login">Login</a></li>
-                {% endif %}
-
-            </ul>
-        </div>
+    <div class="nav-actions">
+      <button id="themeToggle" class="btn btn-ghost">🌓</button>
+      <button id="navToggle" class="nav-toggle">☰</button>
     </div>
-</nav>
 
-<div class="container mt-4">
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, msg in messages %}
-                <div class="alert alert-{{ category }}">{{ msg }}</div>
-            {% endfor %}
+    <nav class="nav-links" id="navLinks">
+      {% if current_user.is_authenticated %}
+        <a class="nav-link" href="{{ url_for('dashboard.index') }}">Dashboard</a>
+        {% if current_user.is_admin %}
+          <a class="nav-link" href="{{ url_for('admin.index') }}">Admin</a>
         {% endif %}
-    {% endwith %}
+        <a class="nav-link" href="{{ url_for('items.list_items') }}">Items</a>
+        <a class="nav-link" href="{{ url_for('users.profile') }}">Perfil</a>
+        <a class="nav-link" href="{{ url_for('auth.logout') }}">Salir</a>
+      {% else %}
+        <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+      {% endif %}
+    </nav>
+  </header>
 
-    {% block content %}{% endblock %}
-</div>
+  <main class="container app-body">
+    <aside class="sidebar">
+      <nav>
+        <div class="nav-item"><a href="{{ url_for('dashboard.index') }}">Inicio</a></div>
+        <div class="nav-item"><a href="{{ url_for('items.list_items') }}">Items</a></div>
+        <div class="nav-item"><a href="{{ url_for('users.profile') }}">Perfil</a></div>
+        {% if current_user.is_admin %}
+        <div class="nav-item"><a href="{{ url_for('admin.index') }}">Admin</a></div>
+        {% endif %}
+      </nav>
+    </aside>
+
+    <section class="main-card">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, msg in messages %}
+            <div class="alert alert-{{ category }}">{{ msg }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container text-center">© {{ current_year }} MiCorp</div>
+  </footer>
+
+  <script>
+    const root = document.documentElement;
+    const toggle = document.getElementById('themeToggle');
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+
+    toggle.onclick = () => {
+      const isDark = root.getAttribute("data-theme") === "dark";
+      if (isDark) root.removeAttribute("data-theme");
+      else root.setAttribute("data-theme", "dark");
+      localStorage.setItem("site-theme", isDark ? "light" : "dark");
+    };
+
+    navToggle.onclick = () => navLinks.classList.toggle("open");
+
+    const saved = localStorage.getItem("site-theme");
+    if (saved === "dark") root.setAttribute("data-theme", "dark");
+  </script>
+
+  {% block scripts %}{% endblock %}
 
 </body>
 </html>

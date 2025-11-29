@@ -2,38 +2,41 @@
 {% block title %}Items{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Items</h2>
-    <a href="{{ url_for('items.item_create') }}" class="btn btn-success">Crear item</a>
+<div class="d-flex justify-content-between mb-2">
+  <h2>Items</h2>
+  <a class="btn btn-primary" href="{{ url_for('items.item_create') }}">Crear</a>
 </div>
 
-<form method="get" class="mb-3">
-    <div class="input-group">
-        <input name="q" value="{{ q }}" class="form-control" placeholder="Buscar...">
-        <button class="btn btn-outline-secondary">Buscar</button>
+<div class="card mb-2">
+  <form class="form-row" method="get">
+    <div class="input-icon" style="flex:1;">
+      <span class="icon-left">🔍</span>
+      <input name="q" value="{{ q }}" class="form-control" placeholder="Buscar...">
     </div>
-</form>
+    <button class="btn btn-secondary">Buscar</button>
+  </form>
+</div>
 
-<table class="table">
-    <thead>
-        <tr><th>ID</th><th>Nombre</th><th>Propietario</th><th>Acciones</th></tr>
-    </thead>
-    <tbody>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>ID</th><th>Nombre</th><th>Propietario</th><th></th></tr></thead>
+      <tbody>
         {% for it in items %}
         <tr>
-            <td>{{ it.id }}</td>
-            <td><a href="{{ url_for('items.item_detail', item_id=it.id) }}">{{ it.name }}</a></td>
-            <td>{{ it.owner.email if it.owner else '—' }}</td>
-            <td>
-                {% if it.owner_id == current_user.id or current_user.is_admin %}
-                <a class="btn btn-sm btn-primary" href="{{ url_for('items.item_edit', item_id=it.id) }}">Editar</a>
-                <form method="POST" action="{{ url_for('items.item_delete', item_id=it.id) }}" style="display:inline" onsubmit="return confirm('Eliminar?')">
-                    <button class="btn btn-sm btn-danger">Eliminar</button>
-                </form>
-                {% endif %}
-            </td>
+          <td>{{ it.id }}</td>
+          <td><a href="{{ url_for('items.item_detail', item_id=it.id) }}">{{ it.name }}</a></td>
+          <td>{{ it.owner.email }}</td>
+          <td>
+            <a class="btn btn-sm btn-primary" href="{{ url_for('items.item_edit', item_id=it.id) }}">Editar</a>
+            <form method="POST" action="{{ url_for('items.item_delete', item_id=it.id) }}" style="display:inline;">
+              <button class="btn btn-sm btn-ghost" onclick="return confirm('Eliminar?')">Eliminar</button>
+            </form>
+          </td>
         </tr>
         {% endfor %}
-    </tbody>
-</table>
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}

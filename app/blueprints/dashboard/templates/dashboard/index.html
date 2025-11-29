@@ -2,15 +2,34 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h2>Dashboard</h2>
+<div class="d-flex justify-content-between mb-2">
+  <h1>Hola, {{ user.email }}</h1>
+  <a class="btn btn-primary" href="{{ url_for('items.item_create') }}">Nuevo Item</a>
+</div>
 
-<p>Bienvenido, <strong>{{ user.email }}</strong>.</p>
+<div class="grid grid-cols-3 mb-2">
+  <div class="card"><div class="card-title">Usuarios</div><div class="text-2xl">{{ stats.users }}</div></div>
+  <div class="card"><div class="card-title">Activos</div><div class="text-2xl">{{ stats.active }}</div></div>
+  <div class="card"><div class="card-title">Items</div><div class="text-2xl">{{ stats.items }}</div></div>
+</div>
 
 <div class="card">
-    <div class="card-body">
-        <h5>Estadísticas</h5>
-        <p>Usuarios registrados: {{ stats.users }}</p>
-        <p>Usuarios activos: {{ stats.active }}</p>
-    </div>
+  <h3 class="card-title">Últimos items</h3>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>ID</th><th>Nombre</th><th>Propietario</th><th>Fecha</th></tr></thead>
+      <tbody>
+        {% for it in latest_items %}
+        <tr>
+          <td>{{ it.id }}</td>
+          <td><a href="{{ url_for('items.item_detail', item_id=it.id) }}">{{ it.name }}</a></td>
+          <td>{{ it.owner.email }}</td>
+          <td>{{ it.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}

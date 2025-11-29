@@ -2,25 +2,22 @@
 {% block title %}Admin{% endblock %}
 
 {% block content %}
-<h2>Panel de Administración</h2>
+<div class="card">
+  <h2 class="card-title">Administración</h2>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Email</th>
-            <th>Admin</th>
-        </tr>
-    </thead>
-    <tbody>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>ID</th><th>Email</th><th>Admin</th></tr></thead>
+      <tbody>
         {% for u in users %}
         <tr>
-            <td>{{ u.id }}</td>
-            <td>{{ u.email }}</td>
-            <td>{{ "Sí" if u.is_admin else "No" }}</td>
+          <td>{{ u.id }}</td>
+          <td>{{ u.email }}</td>
+          <td>{{ 'Sí' if u.is_admin else 'No' }}</td>
         </tr>
         {% endfor %}
-    </tbody>
-</table>
-
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}
