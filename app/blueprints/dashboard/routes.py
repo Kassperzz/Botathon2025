@@ -1,10 +1,24 @@
-from flask import render_template
-from flask_login import login_required, current_user
-from . import bp
+from flask import render_template, redirect, url_for
+from flask_login import login_required, current_user, logout_user
+from . import dashboard_bp
+from app.utils import NOMBRES_REGIONES  # <-- importar la constante
 
-@bp.route('/')
-@login_required
+@dashboard_bp.route('/')
 def index():
-    # datos de ejemplo para la vista del dashboard
-    stats = {"users": 123, "active": 100}
-    return render_template('dashboard/index.html', user=current_user, stats=stats)
+    # Redirigir a login si entra a la raíz
+    return redirect(url_for('auth.login'))
+
+@dashboard_bp.route('/dashboard')
+@login_required
+def home():
+    return render_template(
+        'dashboard/index.html',
+        usuario=current_user.username,
+        NOMBRES_REGIONES=NOMBRES_REGIONES  # <-- pasar al template
+    )
+
+@dashboard_bp.route('/logout')
+def logout_redirect():
+    # Opcional: Cerrar sesión aquí también por seguridad antes de redirigir
+    logout_user() 
+    return redirect(url_for('auth.login'))

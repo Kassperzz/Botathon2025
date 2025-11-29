@@ -5,29 +5,38 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>{% block title %}MiCorp{% endblock %}</title>
 
+  <!-- Fuentes -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+  <!-- CSS Personalizado (Teletón) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/corporate.css') }}">
 
   {% block head %}{% endblock %}
 </head>
 <body class="app-layout">
 
-  <header class="navbar container">
+  <!-- HEADER / NAVBAR SUPERIOR -->
+  <!-- Nota: Quitamos la clase 'container' aquí para que la barra roja sea ancho completo -->
+  <header class="navbar">
     <div class="brand">MiCorp</div>
 
     <div class="nav-actions">
-      <button id="themeToggle" class="btn btn-ghost">🌓</button>
-      <button id="navToggle" class="nav-toggle">☰</button>
+      <button id="themeToggle" class="btn btn-ghost" title="Cambiar tema">🌓</button>
+      <button id="navToggle" class="nav-toggle" title="Menú">☰</button>
     </div>
 
     <nav class="nav-links" id="navLinks">
       {% if current_user.is_authenticated %}
-        <a class="nav-link" href="{{ url_for('dashboard.index') }}">Dashboard</a>
-        {% if current_user.is_admin %}
+        <a class="nav-link" href="{{ url_for('dashboard.home') }}">Dashboard</a>
+        
+        <!-- Verificación de admin (solo si tu modelo Admin tiene esta propiedad) -->
+        {% if current_user.is_admin is defined and current_user.is_admin %}
           <a class="nav-link" href="{{ url_for('admin.index') }}">Admin</a>
         {% endif %}
+        
         <a class="nav-link" href="{{ url_for('items.list_items') }}">Items</a>
         <a class="nav-link" href="{{ url_for('users.profile') }}">Perfil</a>
+        
+        <!-- CORRECCIÓN: Agregada clase 'nav-link' para que se vea bien -->
         <a class="nav-link" href="{{ url_for('auth.logout') }}">Salir</a>
       {% else %}
         <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
@@ -35,19 +44,25 @@
     </nav>
   </header>
 
+  <!-- CONTENIDO PRINCIPAL -->
   <main class="container app-body">
+    
+    <!-- SIDEBAR (Menú lateral) -->
     <aside class="sidebar">
       <nav>
-        <div class="nav-item"><a href="{{ url_for('dashboard.index') }}">Inicio</a></div>
+        <div class="nav-item"><a href="{{ url_for('dashboard.home') }}">Inicio</a></div>
         <div class="nav-item"><a href="{{ url_for('items.list_items') }}">Items</a></div>
         <div class="nav-item"><a href="{{ url_for('users.profile') }}">Perfil</a></div>
-        {% if current_user.is_admin %}
-        <div class="nav-item"><a href="{{ url_for('admin.index') }}">Admin</a></div>
+        
+        {% if current_user.is_admin is defined and current_user.is_admin %}
+          <div class="nav-item"><a href="{{ url_for('admin.index') }}">Admin</a></div>
         {% endif %}
       </nav>
     </aside>
 
+    <!-- ÁREA DE CONTENIDO -->
     <section class="main-card">
+      <!-- Mensajes Flash (Alertas) -->
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           {% for category, msg in messages %}
@@ -56,20 +71,24 @@
         {% endif %}
       {% endwith %}
 
+      <!-- Bloque donde se inyectarán las páginas hijas -->
       {% block content %}{% endblock %}
     </section>
   </main>
 
+  <!-- FOOTER -->
   <footer class="footer">
-    <div class="container text-center">© {{ current_year }} MiCorp</div>
+    <div class="container text-center">© {{ current_year|default('2025') }} MiCorp</div>
   </footer>
 
+  <!-- JAVASCRIPT -->
   <script>
     const root = document.documentElement;
     const toggle = document.getElementById('themeToggle');
     const navToggle = document.getElementById('navToggle');
     const navLinks = document.getElementById('navLinks');
 
+    // Alternar tema
     toggle.onclick = () => {
       const isDark = root.getAttribute("data-theme") === "dark";
       if (isDark) root.removeAttribute("data-theme");
@@ -77,8 +96,10 @@
       localStorage.setItem("site-theme", isDark ? "light" : "dark");
     };
 
+    // Menú móvil
     navToggle.onclick = () => navLinks.classList.toggle("open");
 
+    // Cargar preferencia
     const saved = localStorage.getItem("site-theme");
     if (saved === "dark") root.setAttribute("data-theme", "dark");
   </script>

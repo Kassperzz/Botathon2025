@@ -1,44 +1,41 @@
 from flask import render_template, redirect, url_for, flash, request
-from flask_login import login_user, logout_user, login_required
-from app.extensions import db, login_manager
-from app.models import User
-from . import bp
+from flask_login import login_user, login_required, logout_user, current_user
+from werkzeug.security import check_password_hash
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
+# Importamos el modelo Admin (Asegúrate de tener models.py en app/)
+from app.models import Admin
+# Importamos el blueprint que acabamos de definir en el __init__
+from . import auth_bp
 
-@bp.route('/login', methods=['GET','POST'])
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    # 1. Si el usuario ya está logueado, lo mandamos directo al Dashboard
+    if current_user.is_authenticated:
+        # Nota: 'dashboard.home' asume que en dashboard/routes.py definiste la función como 'home'
+        return redirect(url_for('dashboard.home'))
+
+    # 2. Procesamos el formulario
     if request.method == 'POST':
-        email = request.form['email']
+        username = request.form['username']
         password = request.form['password']
-        user = User.query.filter_by(email=email).first()
-        if user and user.check_password(password):
-            login_user(user)
-            next_page = request.args.get('next') or url_for('dashboard.index')
-            return redirect(next_page)
-        flash('Credenciales inválidas', 'danger')
+        
+        # Buscamos al admin en la base de datos
+        admin = Admin.query.filter_by(username=username).first()
+        
+        # Verificamos contraseña
+        if admin and check_password_hash(admin.password_hash, password):
+            login_user(admin)
+            # Redirigimos al Dashboard tras éxito
+            return redirect(url_for('dashboard.home'))
+        else:
+            flash('Usuario o contraseña incorrectos', 'danger')
+            
+    # 3. Si es GET o falló el login, mostramos el formulario
     return render_template('auth/login.html')
 
-@bp.route('/logout')
+@auth_bp.route('/logout')
 @login_required
 def logout():
     logout_user()
+    flash("Has salido de la plataforma", "info")
     return redirect(url_for('auth.login'))
-
-@bp.route('/register', methods=['GET','POST'])
-def register():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        if User.query.filter_by(email=email).first():
-            flash('Email ya registrado', 'warning')
-            return redirect(url_for('auth.register'))
-        user = User(email=email)
-        user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
-        flash('Cuenta creada, ya puedes entrar', 'success')
-        return redirect(url_for('auth.login'))
-    return render_template('auth/register.html')

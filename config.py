@@ -1,38 +1,19 @@
 import os
-from dotenv import load_dotenv
-
-load_dotenv()  # carga .env automáticamente
+from urllib.parse import quote_plus
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
+    # 1. Credenciales (Ajusta esto si cambia tu configuración local)
+    DB_USER = 'postgres'
+    DB_PASS = 'root'      # ¿Estás seguro de que lleva '!'? A veces es solo 'root'
+    DB_HOST = '127.0.0.1'
+    DB_PORT = '5432'
+    DB_NAME = 'botathon'   # Asegúrate de que esta DB exista en pgAdmin
 
-    # URL de conexión a PostgreSQL
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL",
-        "postgresql://postgres:postgres@localhost:5432/mydatabase"
-    )
+    # 2. Codificamos la contraseña para evitar errores con caracteres especiales
+    encoded_password = quote_plus(DB_PASS)
 
+    # 3. Construimos la URI
+    SQLALCHEMY_DATABASE_URI = f'postgresql://{DB_USER}:{encoded_password}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-    # Opcional: SSL para producción (Heroku, Railway, Render)
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        "connect_args": {
-            # activar sólo si tu proveedor lo requiere
-            # "sslmode": "require"
-        }
-    }
-
-
-class DevelopmentConfig(Config):
-    DEBUG = True
-
-
-class ProductionConfig(Config):
-    DEBUG = False
-
-
-config = {
-    "development": DevelopmentConfig,
-    "production": ProductionConfig,
-    "default": DevelopmentConfig
-}
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'mi_clave_secreta_super_segura'

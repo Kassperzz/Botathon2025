@@ -1,4 +1,7 @@
-# app/blueprints/api/__init__.py
 from flask import Blueprint
-bp = Blueprint('api', __name__, url_prefix='/api')
-from app.blueprints.api import routes
+
+# Definimos el Blueprint
+api_bp = Blueprint('api', __name__)
+
+# Importamos las rutas al final
+from . import routes

@@ -1,35 +1,190 @@
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between mb-2">
-  <h1>Hola, {{ user.email }}</h1>
-  <a class="btn btn-primary" href="{{ url_for('items.item_create') }}">Nuevo Item</a>
-</div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="#">📊 Analytics Botathon</a>
+        <div class="d-flex text-white align-items-center">
+            <small class="me-3">Usuario: <strong>{{ usuario }}</strong></small>
+            <a href="/logout" class="btn btn-sm btn-outline-light">Cerrar Sesión</a>
+        </div>
+    </div>
+</nav>
 
-<div class="grid grid-cols-3 mb-2">
-  <div class="card"><div class="card-title">Usuarios</div><div class="text-2xl">{{ stats.users }}</div></div>
-  <div class="card"><div class="card-title">Activos</div><div class="text-2xl">{{ stats.active }}</div></div>
-  <div class="card"><div class="card-title">Items</div><div class="text-2xl">{{ stats.items }}</div></div>
-</div>
+<div class="container mb-5">
+    <!-- BARRA DE FILTROS -->
+    <div class="filter-bar mb-4">
+        <h5 class="mb-3 text-secondary">🔍 Filtros de Segmentación</h5>
+        <div class="row g-3">
+            <!-- Filtro Región -->
+            <div class="col-md-4">
+                <label class="form-label small text-muted">Región</label>
+                <select id="filtroRegion" class="form-select">
+                    <option value="">🏠 Todas las regiones</option>
+                    {% for id, nombre in NOMBRES_REGIONES.items() %}
+                        <option value="{{ id }}">{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Filtro Ocupación -->
+            <div class="col-md-4">
+                <label class="form-label small text-muted">Ocupación Principal</label>
+                <select id="filtroOcupacion" class="form-select">
+                    <option value="">💼 Todas las ocupaciones</option>
+                    <!-- Se llena con JS -->
+                </select>
+            </div>
 
-<div class="card">
-  <h3 class="card-title">Últimos items</h3>
+            <!-- Filtro Sexo -->
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Sexo</label>
+                <select id="filtroSexo" class="form-select">
+                    <option value="">⚧ Todos</option>
+                    <option value="0">Hombres</option>
+                    <option value="1">Mujeres</option>
+                </select>
+            </div>
 
-  <div class="table-responsive">
-    <table class="table">
-      <thead><tr><th>ID</th><th>Nombre</th><th>Propietario</th><th>Fecha</th></tr></thead>
-      <tbody>
-        {% for it in latest_items %}
-        <tr>
-          <td>{{ it.id }}</td>
-          <td><a href="{{ url_for('items.item_detail', item_id=it.id) }}">{{ it.name }}</a></td>
-          <td>{{ it.owner.email }}</td>
-          <td>{{ it.created_at }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button onclick="cargarDashboard()" class="btn btn-primary w-100">Aplicar Filtros</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TARJETAS DE MÉTRICAS (KPIs) -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card card-stat p-4 border-bottom border-5 border-primary">
+                <span class="text-muted text-uppercase small">Total Filtrado</span>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <span id="kpi-total" class="kpi-number text-dark">...</span>
+                    <span class="fs-1">👥</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-stat p-4 border-bottom border-5 border-info">
+                <span class="text-muted text-uppercase small">Hombres</span>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <span id="kpi-hombres" class="kpi-number text-info">...</span>
+                    <span class="fs-1">♂️</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-stat p-4 border-bottom border-5 border-danger">
+                <span class="text-muted text-uppercase small">Mujeres</span>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <span id="kpi-mujeres" class="kpi-number text-danger">...</span>
+                    <span class="fs-1">♀️</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZONA DE GRÁFICAS -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card card-stat p-4 h-100">
+                <h5 class="card-title mb-4">📍 Distribución Geográfica</h5>
+                <div class="chart-container">
+                    <canvas id="graficoRegiones"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card card-stat p-4 h-100">
+                <h5 class="card-title mb-4">🎓 Perfil Profesional (Top 8)</h5>
+                <div class="chart-container">
+                    <canvas id="graficoOcupaciones"></canvas>
+                </div>
+                <small class="text-muted mt-2 text-center d-block">Muestra las ocupaciones más frecuentes según filtros.</small>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let chartRegiones = null;
+let chartOcupaciones = null;
+
+function cargarListaOcupaciones() {
+    fetch('/api/listas/ocupaciones')
+        .then(res => res.json())
+        .then(lista => {
+            const selector = document.getElementById('filtroOcupacion');
+            lista.forEach(oc => {
+                if(oc.trim().length > 0) {
+                    const opt = document.createElement('option');
+                    opt.value = oc;
+                    opt.text = oc;
+                    selector.appendChild(opt);
+                }
+            });
+        });
+}
+
+function cargarDashboard() {
+    const params = new URLSearchParams({
+        region_id: document.getElementById('filtroRegion').value,
+        sexo_id: document.getElementById('filtroSexo').value,
+        ocupacion: document.getElementById('filtroOcupacion').value
+    });
+
+    fetch(`/api/stats/resumen?${params}`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('kpi-total').innerText = data.total_voluntarios.toLocaleString();
+            document.getElementById('kpi-hombres').innerText = data.hombres.toLocaleString();
+            document.getElementById('kpi-mujeres').innerText = data.mujeres.toLocaleString();
+        });
+
+    fetch(`/api/stats/por-region?${params}`)
+        .then(res => res.json())
+        .then(data => actualizarGraficaRegiones(data));
+
+    fetch(`/api/stats/por-ocupacion?${params}`)
+        .then(res => res.json())
+        .then(data => actualizarGraficaOcupaciones(data));
+}
+
+function actualizarGraficaRegiones(data) {
+    const ctx = document.getElementById('graficoRegiones').getContext('2d');
+    const labels = data.map(item => item.region);
+    const values = data.map(item => item.cantidad);
+
+    if(chartRegiones) chartRegiones.destroy();
+
+    chartRegiones = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Voluntarios', data: values, backgroundColor: '#0d6efd', borderRadius: 5 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } }, y: { beginAtZero: true } } }
+    });
+}
+
+function actualizarGraficaOcupaciones(data) {
+    const ctx = document.getElementById('graficoOcupaciones').getContext('2d');
+    const topData = data.slice(0, 8);
+    const labels = topData.map(item => item.categoria);
+    const values = topData.map(item => item.cantidad);
+
+    if(chartOcupaciones) chartOcupaciones.destroy();
+
+    chartOcupaciones = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Cantidad', data: values, backgroundColor: ['#20c997','#ffc107','#fd7e14','#e83e8c','#6f42c1','#17a2b8','#6610f2','#343a40'], borderRadius: 5 }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    cargarListaOcupaciones();
+    cargarDashboard();
+});
+</script>
 {% endblock %}

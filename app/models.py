@@ -1,33 +1,31 @@
-# app/models.py
-from .extensions import db
 from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
+from app.extensions import db, login_manager
+from app.utils import NOMBRES_REGIONES
 
-class User(db.Model, UserMixin):
-    __tablename__ = 'users'
+class Admin(UserMixin, db.Model):
+    __tablename__ = 'admins'
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(255), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-    is_admin = db.Column(db.Boolean, default=False)
+    username = db.Column(db.String(50), unique=True)
+    password_hash = db.Column(db.String(256))
 
-    items = db.relationship('Item', back_populates='owner', cascade='all, delete-orphan')
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-
-class Item(db.Model):
-    __tablename__ = 'items'
+class Voluntario(db.Model):
+    __tablename__ = 'voluntarios'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
+    nombres = db.Column(db.String(150))
+    apellido_paterno = db.Column(db.String(100))
+    ocupacion = db.Column(db.String(255))
+    region_id = db.Column(db.Integer)
+    sexo_id = db.Column(db.Integer)
+    
+    def to_json(self):
+        nombre_region = NOMBRES_REGIONES.get(self.region_id, f"Región {self.region_id}")
+        return {
+            'id': self.id,
+            'nombre_completo': f"{self.nombres} {self.apellido_paterno}",
+            'ocupacion': self.ocupacion,
+            'region': nombre_region
+        }
 
-    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    owner = db.relationship('User', back_populates='items')
-
-    def __repr__(self):
-        return f"<Item {self.id} {self.name}>"
+@login_manager.user_loader
+def load_user(user_id):
+    return Admin.query.get(int(user_id))
