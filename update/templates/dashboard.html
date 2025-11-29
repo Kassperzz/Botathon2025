@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Avanzado</title>
+    <!-- Bootstrap y Chart.js -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
+        .filter-bar { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .card-stat { border: none; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: all 0.3s; background: white; }
+        .card-stat:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .kpi-number { font-size: 2.5rem; font-weight: 700; }
+        .chart-container { position: relative; height: 350px; width: 100%; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="#">📊 Analytics Botathon</a>
+        <div class="d-flex text-white align-items-center">
+            <small class="me-3">Usuario: <strong>{{ usuario }}</strong></small>
+            <a href="/logout" class="btn btn-sm btn-outline-light">Cerrar Sesión</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mb-5">
+    
+    <!-- BARRA DE FILTROS -->
+    <div class="filter-bar mb-4">
+        <h5 class="mb-3 text-secondary">🔍 Filtros de Segmentación</h5>
+        <div class="row g-3">
+            <!-- Filtro Región -->
+            <div class="col-md-4">
+                <label class="form-label small text-muted">Región</label>
+                <select id="filtroRegion" class="form-select">
+                    <option value="">🏠 Todas las regiones</option>
+                    <option value="15">Arica y Parinacota</option>
+                    <option value="1">Tarapacá</option>
+                    <option value="2">Antofagasta</option>
+                    <option value="3">Atacama</option>
+                    <option value="4">Coquimbo</option>
+                    <option value="5">Valparaíso</option>
+                    <option value="13">Metropolitana</option>
+                    <option value="6">O'Higgins</option>
+                    <option value="7">Maule</option>
+                    <option value="16">Ñuble</option>
+                    <option value="8">Biobío</option>
+                    <option value="9">Araucanía</option>
+                    <option value="14">Los Ríos</option>
+                    <option value="10">Los Lagos</option>
+                    <option value="11">Aysén</option>
+                    <option value="12">Magallanes</option>
+                </select>
+            </div>
+            
+            <!-- Filtro Ocupación -->
+            <div class="col-md-4">
+                <label class="form-label small text-muted">Ocupación Principal</label>
+                <select id="filtroOcupacion" class="form-select">
+                    <option value="">💼 Todas las ocupaciones</option>
+                    <!-- Se llena con JS -->
+                </select>
+            </div>
+
+            <!-- Filtro Sexo -->
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Sexo</label>
+                <select id="filtroSexo" class="form-select">
+                    <option value="">⚧ Todos</option>
+                    <option value="0">Hombres</option>
+                    <option value="1">Mujeres</option>
+                </select>
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+                <button onclick="cargarDashboard()" class="btn btn-primary w-100">Aplicar Filtros</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TARJETAS DE MÉTRICAS (KPIs) -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card card-stat p-4 border-bottom border-5 border-primary">
+                <span class="text-muted text-uppercase small">Total Filtrado</span>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <span id="kpi-total" class="kpi-number text-dark">...</span>
+                    <span class="fs-1">👥</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-stat p-4 border-bottom border-5 border-info">
+                <span class="text-muted text-uppercase small">Hombres</span>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <span id="kpi-hombres" class="kpi-number text-info">...</span>
+                    <span class="fs-1">♂️</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-stat p-4 border-bottom border-5 border-danger">
+                <span class="text-muted text-uppercase small">Mujeres</span>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <span id="kpi-mujeres" class="kpi-number text-danger">...</span>
+                    <span class="fs-1">♀️</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZONA DE GRÁFICAS -->
+    <div class="row">
+        <!-- Gráfica 1: Regiones -->
+        <div class="col-lg-6 mb-4">
+            <div class="card card-stat p-4 h-100">
+                <h5 class="card-title mb-4">📍 Distribución Geográfica</h5>
+                <div class="chart-container">
+                    <canvas id="graficoRegiones"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfica 2: Ocupaciones (NUEVA) -->
+        <div class="col-lg-6 mb-4">
+            <div class="card card-stat p-4 h-100">
+                <h5 class="card-title mb-4">🎓 Perfil Profesional (Top 8)</h5>
+                <div class="chart-container">
+                    <canvas id="graficoOcupaciones"></canvas>
+                </div>
+                <small class="text-muted mt-2 text-center d-block">Muestra las ocupaciones más frecuentes según filtros.</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Instancias globales de gráficas para poder destruirlas y recrearlas
+    let chartRegiones = null;
+    let chartOcupaciones = null;
+
+    // 1. Cargar la lista de ocupaciones al dropdown
+    function cargarListaOcupaciones() {
+        fetch('/api/listas/ocupaciones')
+            .then(res => res.json())
+            .then(lista => {
+                const selector = document.getElementById('filtroOcupacion');
+                lista.forEach(oc => {
+                    if(oc.trim().length > 0) {
+                        const opt = document.createElement('option');
+                        opt.value = oc;
+                        opt.text = oc;
+                        selector.appendChild(opt);
+                    }
+                });
+            });
+    }
+
+    // 2. Cargar TODO el Dashboard
+    function cargarDashboard() {
+        // Recolectar valores de los filtros
+        const params = new URLSearchParams({
+            region_id: document.getElementById('filtroRegion').value,
+            sexo_id: document.getElementById('filtroSexo').value,
+            ocupacion: document.getElementById('filtroOcupacion').value
+        });
+
+        // A. Cargar KPIs
+        fetch(`/api/stats/resumen?${params}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('kpi-total').innerText = data.total_voluntarios.toLocaleString();
+                document.getElementById('kpi-hombres').innerText = data.hombres.toLocaleString();
+                document.getElementById('kpi-mujeres').innerText = data.mujeres.toLocaleString();
+            });
+
+        // B. Cargar Gráfica Regiones
+        fetch(`/api/stats/por-region?${params}`)
+            .then(res => res.json())
+            .then(data => actualizarGraficaRegiones(data));
+
+        // C. Cargar Gráfica Ocupaciones (NUEVA)
+        fetch(`/api/stats/por-ocupacion?${params}`)
+            .then(res => res.json())
+            .then(data => actualizarGraficaOcupaciones(data));
+    }
+
+    // --- RENDERIZADO DE GRÁFICAS ---
+
+    function actualizarGraficaRegiones(data) {
+        const ctx = document.getElementById('graficoRegiones').getContext('2d');
+        const labels = data.map(item => item.region);
+        const values = data.map(item => item.cantidad);
+
+        if (chartRegiones) chartRegiones.destroy();
+
+        chartRegiones = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Voluntarios',
+                    data: values,
+                    backgroundColor: '#0d6efd',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { 
+                    x: { ticks: { maxRotation: 45, minRotation: 45 } },
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    function actualizarGraficaOcupaciones(data) {
+        const ctx = document.getElementById('graficoOcupaciones').getContext('2d');
+        
+        // Tomamos solo el TOP 8 para que la gráfica no se vea fea
+        const topData = data.slice(0, 8);
+        
+        const labels = topData.map(item => item.categoria);
+        const values = topData.map(item => item.cantidad);
+
+        if (chartOcupaciones) chartOcupaciones.destroy();
+
+        chartOcupaciones = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Cantidad',
+                    data: values,
+                    backgroundColor: [
+                        '#20c997', '#ffc107', '#fd7e14', '#e83e8c', 
+                        '#6f42c1', '#17a2b8', '#6610f2', '#343a40'
+                    ],
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                indexAxis: 'y', // <--- ¡Esto hace la gráfica horizontal!
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true } }
+            }
+        });
+    }
+
+    // Inicio automático
+    document.addEventListener("DOMContentLoaded", () => {
+        cargarListaOcupaciones();
+        cargarDashboard();
+    });
+
+</script>
+
+</body>
+</html>
