@@ -1,0 +1,40 @@
+Flask==3.0.3
+gunicorn==22.0.0
+
+# Base de datos PostgreSQL
+psycopg2-binary==2.9.9
+
+# ORM y migraciones
+SQLAlchemy==2.0.31
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7
+alembic==1.13.1
+
+# Autenticación
+Flask-Login==0.6.3
+
+# Formularios y CSRF
+Flask-WTF==1.2.1
+WTForms==3.1.2
+
+# Variables de entorno
+python-dotenv==1.0.1
+
+# Tareas asíncronas (opcional)
+celery==5.3.6
+redis==5.0.4
+
+# Serialización/API
+marshmallow==3.21.2
+
+# Utilidades
+werkzeug==3.0.3
+itsdangerous==2.2.0
+
+# Testing
+pytest==8.2.0
+pytest-flask==1.3.0
+
+# Formato y lint (opcionales)
+black==24.4.2
+flake8==7.1.0

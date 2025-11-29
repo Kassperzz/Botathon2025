@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Item{% endblock %}
+
+{% block content %}
+<h2>{{ action }} Item</h2>
+
+<form method="POST">
+    <div class="mb-3">
+        <label>Nombre</label>
+        <input name="name" class="form-control" required value="{{ item.name if item else '' }}">
+    </div>
+
+    <div class="mb-3">
+        <label>Descripción</label>
+        <textarea name="description" class="form-control">{{ item.description if item else '' }}</textarea>
+    </div>
+
+    <button class="btn btn-success">{{ action }}</button>
+    <a class="btn btn-secondary" href="{{ url_for('items.list_items') }}">Cancelar</a>
+</form>
+{% endblock %}

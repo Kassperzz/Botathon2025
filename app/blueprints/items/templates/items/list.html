@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Items{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Items</h2>
+    <a href="{{ url_for('items.item_create') }}" class="btn btn-success">Crear item</a>
+</div>
+
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input name="q" value="{{ q }}" class="form-control" placeholder="Buscar...">
+        <button class="btn btn-outline-secondary">Buscar</button>
+    </div>
+</form>
+
+<table class="table">
+    <thead>
+        <tr><th>ID</th><th>Nombre</th><th>Propietario</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+        {% for it in items %}
+        <tr>
+            <td>{{ it.id }}</td>
+            <td><a href="{{ url_for('items.item_detail', item_id=it.id) }}">{{ it.name }}</a></td>
+            <td>{{ it.owner.email if it.owner else '—' }}</td>
+            <td>
+                {% if it.owner_id == current_user.id or current_user.is_admin %}
+                <a class="btn btn-sm btn-primary" href="{{ url_for('items.item_edit', item_id=it.id) }}">Editar</a>
+                <form method="POST" action="{{ url_for('items.item_delete', item_id=it.id) }}" style="display:inline" onsubmit="return confirm('Eliminar?')">
+                    <button class="btn btn-sm btn-danger">Eliminar</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

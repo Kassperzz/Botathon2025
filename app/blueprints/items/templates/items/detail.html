@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Detalle Item{% endblock %}
+
+{% block content %}
+<h2>{{ item.name }}</h2>
+<p><strong>Propietario:</strong> {{ item.owner.email if item.owner else '—' }}</p>
+<p><strong>Creado:</strong> {{ item.created_at }}</p>
+<p>{{ item.description }}</p>
+
+<a href="{{ url_for('items.list_items') }}" class="btn btn-secondary">Volver</a>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2>Dashboard</h2>
+
+<p>Bienvenido, <strong>{{ user.email }}</strong>.</p>
+
+<div class="card">
+    <div class="card-body">
+        <h5>Estadísticas</h5>
+        <p>Usuarios registrados: {{ stats.users }}</p>
+        <p>Usuarios activos: {{ stats.active }}</p>
+    </div>
+</div>
+{% endblock %}
